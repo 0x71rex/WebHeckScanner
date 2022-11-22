@@ -57,7 +57,7 @@ fi
 sqlmapRun(){ #instant
 echo "----RUNNING SQLMAP ~instant-10m----"
 echo "Running heuristic test (POSITIVE if 'Completed' not displayed within 5 seconds)"
-"sqlmap" --level 3 --risk 3 --batch --eta --smart -url $url > "${name}/sqlVuln.txt"
+"sqlmap/sqlmap.py" --level 3 --risk 3 --batch --eta --smart -url $url > "${name}/sqlVuln.txt"
 echo "Completed heuristic test"
 }
 nucleiRun(){ #roughly 10 mins depending on site size
