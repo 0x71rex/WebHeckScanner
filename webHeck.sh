@@ -31,7 +31,7 @@ mkdir $name
 echo ""
 echo "----INITAL CONFIGURATION COMPLETE----"
 echo "----COMMENCING NIKTO SCAN ~10m----"
-"nikto" -h $url -maxtime 10m > "${name}/niktoScan.txt"
+"nikto/program/nikto.pl" -url $url -maxtime 10m > "${name}/niktoScan.txt"
 }
 getSubdomains() { #roughly 30 seconds
 echo "----COLLECTING SUBDOMAINS ~30s----"
