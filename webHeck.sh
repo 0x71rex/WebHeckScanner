@@ -31,12 +31,12 @@ mkdir $name
 echo ""
 echo "----INITAL CONFIGURATION COMPLETE----"
 echo "----COMMENCING NIKTO SCAN ~10m----"
-"nikto/program/nikto.pl" -url $url -maxtime 10m > "${name}/niktoScan.txt"
+"nikto" -h $url -maxtime 10m > "${name}/niktoScan.txt"
 }
 getSubdomains() { #roughly 30 seconds
 echo "----COLLECTING SUBDOMAINS ~30s----"
 #upon killing this command, log the error and continue
-"req_solos/gau" --threads 10 --subs $url > "${name}/liveSubs.txt" & 
+"gau" --threads 10 --subs $url > "${name}/liveSubs.txt" & 
 sleep 30 
 kill $!
 if [ -s "${name}/liveSubs.txt" ]; then
@@ -44,7 +44,7 @@ if [ -s "${name}/liveSubs.txt" ]; then
         cat "${name}/liveSubs.txt" | head -n 1000 > "${name}/liveSubs1000.txt"
         rm "${name}/liveSubs.txt"
         echo "Success! Total targets: $(wc -l ${name}/liveSubs1000.txt | awk '{print $1}') (yes, it is supposed to show the 'Terminated message'.)"
-        cat "${name}/liveSubs1000.txt" | "req_solos/gauplus" —random-agent —subs -t 5000 | "req_solos/anew" -q "${name}/subsToFilter.txt"
+        cat "${name}/liveSubs1000.txt" | "gauplus" —random-agent —subs -t 5000 | "anew" -q "${name}/subsToFilter.txt"
         cat "${name}/subsToFilter.txt" | cut -d"?" -f1 | cut -d"=" -f1 > "${name}/filtered.txt"
 else
         echo "No subdomains found!"
@@ -57,12 +57,12 @@ fi
 sqlmapRun(){ #instant
 echo "----RUNNING SQLMAP ~instant-10m----"
 echo "Running heuristic test (POSITIVE if 'Completed' not displayed within 5 seconds)"
-"sqlmap/sqlmap.py" --level 3 --risk 3 --batch --eta --smart -url $url > "${name}/sqlVuln.txt"
+"sqlmap" --level 3 --risk 3 --batch --eta --smart -url $url > "${name}/sqlVuln.txt"
 echo "Completed heuristic test"
 }
 nucleiRun(){ #roughly 10 mins depending on site size
 echo "----RUNNING NUCLEI ~1m-10m----"
-"nuclei/nuclei" -as -es info -l "${name}/liveSubs1000.txt" -stats -si 30 -silent > "${name}/nucleiResults.txt"
+"nuclei" -as -es info -l "${name}/liveSubs1000.txt" -stats -si 30 -silent > "${name}/nucleiResults.txt"
 if [ -s "${name}/nucleiResults.txt" ]; then
         echo "----LOCATED VULNERABILITIES----"
 else
@@ -72,7 +72,7 @@ fi
 }
 filterAndClean() { #instant
 echo "----FILTERING FILETYPES ~instant----"
-grep -iaE "([^.]+)\.zip$|([^.]+)\.zip\.[0-9]+$|([^.]+)\.zip[0-9]+$|([^.]+)\.zip[a-z][A-Z][0-9]+$|([^.]+)\.zip\.[a-z][A-Z][0-9]+$|([^.]+)\.rar$|([^.]+)\.tar$|([^.]+)\.tar\.gz$|([^.]+)\.tgz$|([^.]+)\.sql$|([^.]+)\.db$|([^.]+)\.sqlite$|([^.]+)\.pgsql\.txt$|([^.]+)\.mysql\.txt$|([^.]+)\.gz$|([^.]+)\.config$|([^.]+)\.log$|([^.]+)\.bak$|([^.]+)\.backup$|([^.]+)\.bkp$|([^.]+)\.crt$|([^.]+)\.dat$|([^.]+)\.eml$|([^.]+)\.java$|([^.]+)\.lst$|([^.]+)\.key$|([^.]+)\.passwd$|([^.]+)\.pl$|([^.]+)\.pwd$|([^.]+)\.mysql-connect$|([^.]+)\.jar$|([^.]+)\.cfg$|([^.]+)\.dir$|([^.]+)\.orig$|([^.]+)\.bz2$|([^.]+)\.old$|([^.]+)\.vbs$|([^.]+)\.img$|([^.]+)\.inf$|([^.]+)\.sh$|([^.]+)\.py$|([^.]+)\.vbproj$|([^.]+)\.mysql-pconnect$|([^.]+)\.war$|([^.]+)\.go$|([^.]+)\.psql$|([^.]+)\.sql\.gz$|([^.]+)\.vb$|([^.]+)\.webinfo$|([^.]+)\.jnlp$|([^.]+)\.cgi$|([^.]+)\.temp$|([^.]+)\.ini$|([^.]+)\.webproj$|([^.]+)\.xsql$|([^.]+)\.raw$|([^.]+)\.inc$|([^.]+)\.lck$|([^.]+)\.nz$|([^.]+)\.rc$|([^.]+)\.html\.gz$|([^.]+)\.gz$|([^.]+)\.env$|([^.]+)\.yml$" $name/filtered.txt | sort -u | "req_solos/httpx" -silent -follow-redirects -threads 800 -mc 200 > "${name}/leaks.txt"
+grep -iaE "([^.]+)\.zip$|([^.]+)\.zip\.[0-9]+$|([^.]+)\.zip[0-9]+$|([^.]+)\.zip[a-z][A-Z][0-9]+$|([^.]+)\.zip\.[a-z][A-Z][0-9]+$|([^.]+)\.rar$|([^.]+)\.tar$|([^.]+)\.tar\.gz$|([^.]+)\.tgz$|([^.]+)\.sql$|([^.]+)\.db$|([^.]+)\.sqlite$|([^.]+)\.pgsql\.txt$|([^.]+)\.mysql\.txt$|([^.]+)\.gz$|([^.]+)\.config$|([^.]+)\.log$|([^.]+)\.bak$|([^.]+)\.backup$|([^.]+)\.bkp$|([^.]+)\.crt$|([^.]+)\.dat$|([^.]+)\.eml$|([^.]+)\.java$|([^.]+)\.lst$|([^.]+)\.key$|([^.]+)\.passwd$|([^.]+)\.pl$|([^.]+)\.pwd$|([^.]+)\.mysql-connect$|([^.]+)\.jar$|([^.]+)\.cfg$|([^.]+)\.dir$|([^.]+)\.orig$|([^.]+)\.bz2$|([^.]+)\.old$|([^.]+)\.vbs$|([^.]+)\.img$|([^.]+)\.inf$|([^.]+)\.sh$|([^.]+)\.py$|([^.]+)\.vbproj$|([^.]+)\.mysql-pconnect$|([^.]+)\.war$|([^.]+)\.go$|([^.]+)\.psql$|([^.]+)\.sql\.gz$|([^.]+)\.vb$|([^.]+)\.webinfo$|([^.]+)\.jnlp$|([^.]+)\.cgi$|([^.]+)\.temp$|([^.]+)\.ini$|([^.]+)\.webproj$|([^.]+)\.xsql$|([^.]+)\.raw$|([^.]+)\.inc$|([^.]+)\.lck$|([^.]+)\.nz$|([^.]+)\.rc$|([^.]+)\.html\.gz$|([^.]+)\.gz$|([^.]+)\.env$|([^.]+)\.yml$" $name/filtered.txt | sort -u | "httpx" -silent -follow-redirects -threads 800 -mc 200 > "${name}/leaks.txt"
 rm -rf "${name}/filtered.txt" "${name}/liveSubs1000.txt" "${name}/subsToFilter.txt" "${name}/critUrls.txt"
 }
 cleanLeaks() { #instant
